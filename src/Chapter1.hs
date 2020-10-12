@@ -478,9 +478,10 @@ Implement a function that returns the last digit of a given number.
   results. Or you can try to guess the function name, search for it and check
   whether it works for you!
 -}
-lastDigit :: Int -> Int
-lastDigit n = mod (abs n) 10
+-- DON'T FORGET TO SPECIFY THE TYPE IN HERE
 
+lastDigit :: Integral a => a -> a
+lastDigit n = mod n 10
 
 {- |
 =⚔️= Task 6
@@ -509,7 +510,7 @@ branches because it is an expression and it must always return some value.
   satisfying the check will be returned and, therefore, evaluated.
 -}
 closestToZero :: Int -> Int -> Int
-closestToZero x y = if abs x < abs y then x else y
+closestToZero x y = if (abs x) < (abs y) then x else y
 
 
 {- |
@@ -542,13 +543,12 @@ value after "=" where the condition is true.
 
 Casual reminder about adding top-level type signatures for all functions :)
 -}
+
 mid :: Int -> Int -> Int -> Int
-mid x y z
-    | x <= z && z <= y = z
-    | y <= z && z <= x = z
-    | y <= x && x <= z = x
-    | z <= x && x <= y = x
-    | otherwise        = y
+mid x y z 
+  | (x >= y && x <= z) || (x <= y && x >= z) = x
+  | (y >= x && y <= z) || (y <= x && y >= z) = y
+  | (z >= y && z <= x) || (z <= y && z >= x) = z
 
 {- |
 =⚔️= Task 8
@@ -562,15 +562,15 @@ True
 >>> isVowel 'x'
 False
 -}
+
 isVowel :: Char -> Bool
 isVowel c
-    | c == 'a'  = True
-    | c == 'e'  = True
-    | c == 'i'  = True
-    | c == 'o'  = True
-    | c == 'u'  = True
-    | otherwise = False
-
+  | c == 'a' || c == 'A' = True
+  | c == 'e' || c == 'E' = True
+  | c == 'i' || c == 'I' = True
+  | c == 'o' || c == 'O' = True
+  | c == 'u' || c == 'U' = True
+  | otherwise = False
 
 {- |
 == Local variables and functions
@@ -632,12 +632,12 @@ Implement a function that returns the sum of the last two digits of a number.
 Try to introduce variables in this task (either with let-in or where) to avoid
 specifying complex expressions.
 -}
-sumLast2 :: Int -> Int
-sumLast2 n =
-    let lastTwo = mod (abs n) 100
-        (second, first) = divMod lastTwo 10
-    in second + first
 
+sumLast2 :: Int -> Int
+sumLast2 n = 
+  let last = n `mod` 10
+      sndLast = (n `div` 10) `mod` 10
+  in (last + sndLast)
 
 {- |
 =💣= Task 10*
@@ -657,12 +657,10 @@ You need to use recursion in this task. Feel free to return to it later, if you
 aren't ready for this boss yet!
 -}
 
-firstDigit :: Int -> Int
-firstDigit n = go (divMod (abs n) 10)
-  where
-    go :: (Int, Int) -> Int
-    go (0, lastD) = lastD
-    go (rest, _) = go (divMod rest 10)
+firstDigit:: Int -> Int
+firstDigit n 
+  | n `div` 10 == 0 = n
+  | otherwise = firstDigit (n `div` 10)
 
 {-
 You did it! Now it is time to the open pull request with your changes

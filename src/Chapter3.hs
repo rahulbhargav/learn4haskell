@@ -343,6 +343,18 @@ Define the Book product data type. You can take inspiration from our description
 of a book, but you are not limited only by the book properties we described.
 Create your own book type of your dreams!
 -}
+ 
+data Genre = Action | Fiction | Romance | Poetry | Horror | Science | Tech | Other deriving (Show)
+
+data Book = Book 
+  { bookTitle :: String
+  , bookAuthors :: [String]
+  , bookCover :: String
+  , bookGenre :: Genre
+  , bookPageCount :: Int
+  , bookPublisher :: String
+  , bookLanguage :: String
+  } deriving (Show)
 
 {- |
 =⚔️= Task 2
@@ -374,6 +386,24 @@ after the fight. The battle has the following possible outcomes:
 
 -}
 
+data Knight = Knight
+    { knightHealth :: Int
+    , knightAttack :: Int
+    , knightGold :: Int
+    } deriving (Show)
+
+data Monster = Monster
+    { monsterHealth :: Int
+    , monsterAttack :: Int
+    , monsterGold :: Int
+    } deriving (Show)
+
+fight :: Monster -> Knight -> Int
+fight m k 
+  | knightAttack k >= monsterHealth m = knightGold k + monsterGold m 
+  | knightHealth k <= monsterAttack m = (-1)
+  | otherwise = knightGold k
+  
 {- |
 =🛡= Sum types
 
@@ -459,6 +489,16 @@ and provide more flexibility when working with data types.
 Create a simple enumeration for the meal types (e.g. breakfast). The one who
 comes up with the most number of names wins the challenge. Use your creativity!
 -}
+data MealTypes
+    = MorningSnack
+    | Breakfast
+    | Elevenses
+    | Brunch
+    | Lunch
+    | EveningSnack
+    | Supper
+    | Dinner
+    | LateNightSnack
 
 {- |
 =⚔️= Task 4
@@ -479,6 +519,50 @@ After defining the city, implement the following functions:
    complicated task, walls can be built only if the city has a castle
    and at least 10 living __people__ inside in all houses of the city totally.
 -}
+
+data Castle = Castle 
+  { castleName :: String
+  , hasWalls :: Bool
+  } deriving (Show)
+
+makeCastle :: String -> Bool -> Castle
+makeCastle n withWalls = Castle { castleName = n, hasWalls = True }
+
+data PersonCount = One | Two | Three | Four deriving (Show)
+data House = House PersonCount deriving (Show)
+
+houseCount :: House -> Int
+houseCount (House One) = 1
+houseCount (House Two) = 2
+houseCount (House Three) = 3
+houseCount (House Four) = 4
+
+data Building = Church | Library deriving (Show)
+
+data City = City 
+  { cityCastle :: Maybe Castle
+  , cityHouses :: [House]
+  , cityBuilding :: Building
+  } deriving (Show)
+
+buildCastle :: City -> String -> City
+buildCastle city name = 
+  case cityCastle city of 
+    Just Castle {hasWalls=True} -> city { cityCastle = Just (makeCastle name True) }
+    _ -> city { cityCastle = Just (makeCastle name False) }
+  
+buildHouse :: City -> House -> City
+buildHouse c h = c { cityHouses = h : cityHouses c }
+
+buildWalls :: City -> City
+buildWalls city =   
+  case city of 
+    City { cityCastle = Just castle@(Castle { hasWalls=False }) } -> 
+      if sum (houseCount `map` cityHouses city) >= 10 
+      then city { cityCastle = Just (castle { hasWalls = True }) }
+      else city
+    _ -> city
+  
 
 {-
 =🛡= Newtypes
@@ -560,22 +644,31 @@ introducing extra newtypes.
 🕯 HINT: if you complete this task properly, you don't need to change the
     implementation of the "hitPlayer" function at all!
 -}
+
+newtype Health = MkHealth Int
+newtype Armor = MkArmor Int
+newtype Attack = MkAttack Int
+newtype Dexterity = MkDexterity Int
+newtype Strength = MkStrength Int
+newtype Damage = MkDamage Int
+newtype Defense = MkDefense Int 
+
 data Player = Player
-    { playerHealth    :: Int
-    , playerArmor     :: Int
-    , playerAttack    :: Int
-    , playerDexterity :: Int
-    , playerStrength  :: Int
+    { playerHealth    :: Health
+    , playerArmor     :: Armor
+    , playerAttack    :: Attack
+    , playerDexterity :: Dexterity
+    , playerStrength  :: Strength
     }
 
-calculatePlayerDamage :: Int -> Int -> Int
-calculatePlayerDamage attack strength = attack + strength
+calculatePlayerDamage :: Attack -> Strength -> Damage
+calculatePlayerDamage (MkAttack attack) (MkStrength strength) = MkDamage (attack + strength)
 
-calculatePlayerDefense :: Int -> Int -> Int
-calculatePlayerDefense armor dexterity = armor * dexterity
+calculatePlayerDefense :: Armor -> Dexterity -> Defense
+calculatePlayerDefense (MkArmor armor) (MkDexterity dexterity) = MkDefense (armor * dexterity)
 
-calculatePlayerHit :: Int -> Int -> Int -> Int
-calculatePlayerHit damage defense health = health + defense - damage
+calculatePlayerHit :: Damage -> Defense -> Health -> Health
+calculatePlayerHit (MkDamage damage) (MkDefense defense) (MkHealth health) = MkHealth (health + defense - damage)
 
 -- The second player hits first player and the new first player is returned
 hitPlayer :: Player -> Player -> Player
@@ -753,6 +846,18 @@ parametrise data types in places where values can be of any general type.
   maybe-treasure ;)
 -}
 
+newtype Dragon p = Dragon p
+
+data TreasureChest t = TreasureChest
+  { treasureChestGold :: Int
+  , treasureChestLoot :: t
+  }
+
+data Lair treasure power = Lair
+  { lairDragon :: Dragon power
+  , lairTresureChest :: Maybe (TreasureChest treasure)
+  }
+
 {-
 =🛡= Typeclasses
 
@@ -907,9 +1012,22 @@ Implement instances of "Append" for the following types:
   ✧ *(Challenge): "Maybe" where append is appending of values inside "Just" constructors
 
 -}
+
+newtype Gold = Gold Int
+
 class Append a where
     append :: a -> a -> a
 
+instance Append Gold where
+  append (Gold a) (Gold b) = Gold (a + b)
+
+instance Append [a] where
+  append = (++)
+
+instance Append a => Append (Maybe a) where
+  append x Nothing = x
+  append Nothing y = y
+  append (Just x) (Just y) = Just (append x y)
 
 {-
 =🛡= Standard Typeclasses and Deriving
@@ -970,6 +1088,20 @@ implement the following functions:
 
 🕯 HINT: to implement this task, derive some standard typeclasses
 -}
+
+data Weekday = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday deriving(Enum, Show, Ord, Eq)
+
+isWeekend :: Weekday -> Bool
+isWeekend Saturday = True
+isWeekend Sunday = True
+isWeekend _ = False
+
+nextDay :: Weekday -> Weekday
+nextDay Sunday = Monday
+nextDay d = succ d
+
+daysToParty :: Weekday -> Int
+daysToParty d = mod (fromEnum Friday - fromEnum d) 7
 
 {-
 =💣= Task 9*

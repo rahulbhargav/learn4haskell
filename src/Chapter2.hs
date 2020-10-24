@@ -350,9 +350,8 @@ ghci> :l src/Chapter2.hs
 -}
 subList :: Int -> Int -> [a] -> [a]
 subList a b ls
-  | a < 0 || b < 0 = []
-  | a <= b = take (b - a + 1) (drop a ls)
-  | otherwise = []
+  | a < 0 || b < 0 || a > b = []
+  | otherwise = take (b - a + 1) (drop a ls)
 
 {- |
 =⚔️= Task 4
@@ -365,7 +364,7 @@ Implement a function that returns only the first half of a given list.
 "b"
 -}
 firstHalf :: [a] -> [a]
-firstHalf l = take ((length l) `div` 2) l
+firstHalf l = take (length l `div` 2) l
 
 {- |
 =🛡= Pattern matching
@@ -622,7 +621,6 @@ Implement a function that duplicates each element of the list
 -}
 duplicate :: [a] -> [a]
 duplicate [] = []
-duplicate [e] = [e, e]
 duplicate (h : rest) = h : h : duplicate rest
 
 {- |
@@ -747,7 +745,7 @@ value of the element itself
 🕯 HINT: Use combination of 'map' and 'replicate'
 -}
 smartReplicate :: [Int] -> [Int]
-smartReplicate l =  concat $ map (\x -> replicate x x) l
+smartReplicate =  concatMap (\x -> replicate x x)
 
 {- |
 =⚔️= Task 9
@@ -761,7 +759,7 @@ the list with only those lists that contain a passed element.
 🕯 HINT: Use the 'elem' function to check whether an element belongs to a list
 -}
 contains :: Int -> [[Int]] -> [[Int]]
-contains n = filter (\x -> elem n x)
+contains n = filter (elem n)
 
 {- |
 =🛡= Eta-reduction
@@ -806,7 +804,7 @@ listElementsLessThan :: Int -> [Int] -> [Int]
 listElementsLessThan x = filter (< x)
 
 pairMul :: Num c => [c] -> [c] -> [c]
-pairMul xs = zipWith (*) xs
+pairMul = zipWith (*)
 
 {- |
 =🛡= Lazy evaluation
@@ -863,7 +861,7 @@ list.
 -}
 rotate :: Int -> [a] -> [a]
 rotate n ls
-  | n < 0 = []
+  | n == 0 = ls
   | otherwise = subList n (n + length ls - 1) (cycle ls)
 
 {- |
@@ -881,8 +879,10 @@ and reverses it.
   cheating!
 -}
 rewind :: [a] -> [a]
-rewind [] = []
-rewind (x:xs) = rewind xs ++ [x]
+rewind = go []
+  where
+    go acc [] = acc
+    go acc (x:xs) = go (x:acc) xs
 
 {-
 You did it! Now it is time to open pull request with your changes

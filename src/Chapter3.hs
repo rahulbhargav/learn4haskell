@@ -520,27 +520,29 @@ After defining the city, implement the following functions:
    and at least 10 living __people__ inside in all houses of the city totally.
 -}
 
-data Castle = Castle 
-  { castleName :: String
-  , hasWalls :: Bool
-  } deriving (Show)
+data Castle 
+    = Castle String
+    | WallCastle String
+    | None deriving (Show)
 
 makeCastle :: String -> Bool -> Castle
-makeCastle n withWalls = Castle { castleName = n, hasWalls = True }
+makeCastle name withWalls = if withWalls then WallCastle name else Castle name
 
 data PersonCount = One | Two | Three | Four deriving (Show)
-data House = House PersonCount deriving (Show)
+newtype House = House PersonCount deriving (Show)
 
 houseCount :: House -> Int
-houseCount (House One) = 1
-houseCount (House Two) = 2
-houseCount (House Three) = 3
-houseCount (House Four) = 4
+houseCount (House count) = 
+  case count of 
+    One -> 1
+    Two -> 2
+    Three -> 3
+    Four -> 4
 
 data Building = Church | Library deriving (Show)
 
 data City = City 
-  { cityCastle :: Maybe Castle
+  { cityCastle :: Castle
   , cityHouses :: [House]
   , cityBuilding :: Building
   } deriving (Show)
@@ -548,18 +550,18 @@ data City = City
 buildCastle :: City -> String -> City
 buildCastle city name = 
   case cityCastle city of 
-    Just Castle {hasWalls=True} -> city { cityCastle = Just (makeCastle name True) }
-    _ -> city { cityCastle = Just (makeCastle name False) }
+    (WallCastle _) -> city { cityCastle = WallCastle name}
+    _ -> city { cityCastle = Castle name }
   
 buildHouse :: City -> House -> City
 buildHouse c h = c { cityHouses = h : cityHouses c }
 
 buildWalls :: City -> City
-buildWalls city =   
+buildWalls city = 
   case city of 
-    City { cityCastle = Just castle@(Castle { hasWalls=False }) } -> 
+    City { cityCastle = Castle name } -> 
       if sum (houseCount `map` cityHouses city) >= 10 
-      then city { cityCastle = Just (castle { hasWalls = True }) }
+      then city { cityCastle = WallCastle name }
       else city
     _ -> city
   
@@ -1089,7 +1091,15 @@ implement the following functions:
 🕯 HINT: to implement this task, derive some standard typeclasses
 -}
 
-data Weekday = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday deriving(Enum, Show, Ord, Eq)
+data Weekday = 
+  Monday 
+  | Tuesday 
+  | Wednesday 
+  | Thursday 
+  | Friday 
+  | Saturday 
+  | Sunday 
+  deriving(Enum, Show, Ord, Eq, Bounded)
 
 isWeekend :: Weekday -> Bool
 isWeekend Saturday = True
@@ -1097,8 +1107,9 @@ isWeekend Sunday = True
 isWeekend _ = False
 
 nextDay :: Weekday -> Weekday
-nextDay Sunday = Monday
-nextDay d = succ d
+nextDay day 
+  | day == maxBound = minBound
+  | otherwise = succ day
 
 daysToParty :: Weekday -> Int
 daysToParty d = mod (fromEnum Friday - fromEnum d) 7

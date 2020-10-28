@@ -716,7 +716,7 @@ instance Functor BTree where
 
 reverseTree :: BTree e -> BTree e
 reverseTree Leaf = Leaf
-reverseTree (Node e (l, r)) = Node e ((reverseTree l), (reverseTree r))
+reverseTree (Node e (l, r)) = Node e ((reverseTree r), (reverseTree l))
 
 treeToList :: BTree e -> [e]
 treeToList Leaf = []
